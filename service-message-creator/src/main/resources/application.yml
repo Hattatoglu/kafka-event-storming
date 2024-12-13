@@ -1,0 +1,18 @@
+server:
+  port: 8500
+
+kafka-producer-config:
+  bootstrap-servers: <<local-machine-ip>>:9092
+  key-serializer-class: org.apache.kafka.common.serialization.StringSerializer
+  value-serializer-class: org.apache.kafka.common.serialization.StringSerializer
+  compression-type: none
+  acks: 1
+  batch-size: 16384
+  batch-size-boost-factor: 100
+  linger-ms: 5
+  request-timeout-ms: 60000
+  retry-count: 5
+
+service-content-publisher-messaging:
+  topic:
+    service-content-consumer-topic-name: service-content-topic

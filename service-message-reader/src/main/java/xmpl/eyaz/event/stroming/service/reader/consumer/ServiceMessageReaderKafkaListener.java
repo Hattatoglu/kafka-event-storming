@@ -3,15 +3,18 @@ package xmpl.eyaz.event.stroming.service.reader.consumer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import xmpl.eyaz.event.storming.app.contract.contentcreated.ContentCreatedEvent;
+import xmpl.eyaz.event.storming.app.contract.contentcreated.ContentCreatedEventBody;
+import xmpl.eyaz.event.storming.app.contract.contentcreated.ContentCreatedEventHeader;
 import xmpl.eyaz.event.stroming.service.reader.kafka.ServiceMessageReaderKafkaConsumer;
-import xmpl.eyaz.event.stroming.service.reader.message.ContentCreatedEventBody;
-import xmpl.eyaz.event.stroming.service.reader.message.ContentCreatedEventHeader;
 import xmpl.eyaz.event.stroming.service.reader.service.ServiceMessageReaderService;
+
+import java.util.Arrays;
 
 @Component
 public class ServiceMessageReaderKafkaListener implements ServiceMessageReaderKafkaConsumer<String> {
@@ -34,32 +37,37 @@ public class ServiceMessageReaderKafkaListener implements ServiceMessageReaderKa
         log.info("An message was received from \ntopic : {}\npartition : {}\noffset : {}\nkey : {}",
                 record.topic(), record.partition(), record.offset(), record.key());
 
-        Header headers = record.headers().lastHeader("custom-header");
-        String body = record.value();
+        ContentCreatedEvent event = getContentCreatedEventFromRecord(record);
 
-        ContentCreatedEventHeader header = getHeader(headers);
+        ContentCreatedEventHeader header = event.getContentCreatedEventHeader();
         log.info("ServiceMessageReaderKafkaListener read an event with \nheader : \n{}", header.toString());
-        ContentCreatedEventBody event = getModel(body);
-        log.info("ServiceMessageReaderKafkaListener read an event with\nevent : \n{} ", event.toString());
+        ContentCreatedEventBody body = event.getContentCreatedEventBody();
+        log.info("ServiceMessageReaderKafkaListener read an event with\nevent : \n{} ", body.toString());
 
-        contentConsumerService.handle(event, header);
+        contentConsumerService.handle(event);
 
     }
 
-
-    private ContentCreatedEventHeader getHeader(Header header) {
-        String json = new String(header.value());
-        try {
-            return mapper.readValue(json, ContentCreatedEventHeader.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+    private ContentCreatedEvent getContentCreatedEventFromRecord(ConsumerRecord<String, String> record) {
+        return new ContentCreatedEvent(
+                getContentCreatedEventHeader(record.headers()),
+                getContentCreatedEventBody(record.value()));
     }
 
+    private ContentCreatedEventHeader getContentCreatedEventHeader(Headers headers) {
+        return ContentCreatedEventHeader.builder()
+                .agentName(Arrays.toString(headers.lastHeader("agentName").value()))
+                .correlationId(Arrays.toString(headers.lastHeader("correlationId").value()))
+                .date(Arrays.toString(headers.lastHeader("date").value()))
+                .executorUser(Arrays.toString(headers.lastHeader("executorUser").value()))
+                .messageId(Arrays.toString(headers.lastHeader("messageId").value()))
+                .version(Arrays.toString(headers.lastHeader("version").value()))
+                .build();
+    }
 
-    private ContentCreatedEventBody getModel(String event) {
+    private ContentCreatedEventBody getContentCreatedEventBody(String eventBody) {
         try {
-            return mapper.readValue(event, ContentCreatedEventBody.class);
+            return mapper.readValue(eventBody, ContentCreatedEventBody.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

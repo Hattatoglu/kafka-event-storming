@@ -8,10 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import xmpl.eyaz.event.storming.app.contract.contentcreated.ContentCreatedEvent;
+import xmpl.eyaz.event.storming.app.contract.contentcreated.ContentCreatedEventBody;
+import xmpl.eyaz.event.storming.app.contract.contentcreated.ContentCreatedEventHeader;
 import xmpl.eyaz.event.storming.service.creator.dto.CreateContentRequest;
 import xmpl.eyaz.event.storming.service.creator.kafka.KafkaProducer;
-import xmpl.eyaz.event.storming.service.creator.message.ContentCreatedEventBody;
-import xmpl.eyaz.event.storming.service.creator.message.ContentCreatedEventHeader;
+
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -32,45 +34,45 @@ public class KafkaEventPublisher implements EventPublisher{
 
     @Override
     public void publish(CreateContentRequest request, String link) {
-        UUID messageId = UUID.randomUUID();
 
-        String body = getContentCreatedEvent(request, link);
+        UUID messageId = UUID.randomUUID();
+        ContentCreatedEvent event = getEvent(request, link, messageId);
 
         ProducerRecord<String, String> record = new ProducerRecord<>(TOPIC,
-                messageId.toString(), body);
+                messageId.toString(),
+                getEventBodyPayload(event.getContentCreatedEventBody()));
 
-        record.headers().add("custom-header", getContentCreatedEventHeader(request, messageId));
+        event.getContentCreatedEventHeader().getAllHeaders().forEach(header -> {
+            record.headers().add(header.key(), header.value());
+        });
 
         kafkaProducer.sendRecord(record);
         log.info("KafkaEventPublisher sent an event with messageId : {} ", messageId.toString());
     }
 
-    private byte[] getContentCreatedEventHeader(CreateContentRequest request, UUID messageId) {
+    private ContentCreatedEvent getEvent(CreateContentRequest request, String link, UUID messageId) {
+        return new ContentCreatedEvent(
+                getContentCreatedEventHeader(request, messageId),
+                getContentCreatedEventBody(request, link));
+    }
+
+    private ContentCreatedEventHeader getContentCreatedEventHeader(CreateContentRequest request, UUID messageId) {
         ZonedDateTime time = ZonedDateTime.now();
 
-        ContentCreatedEventHeader header = ContentCreatedEventHeader.builder()
+        return ContentCreatedEventHeader.builder()
                 .agentName("service-content-publisher")
                 .correlationId(String.valueOf(UUID.randomUUID()))
-                .date(time.toInstant().toEpochMilli())
+                .date(String.valueOf(time.toInstant().toEpochMilli()))
                 .executorUser(request.getUsername())
                 .messageId(messageId.toString())
-                .version(request.getVersion())
+                .version(String.valueOf(request.getVersion()))
                 .build();
-        log.info("KafkaEventPublisher created an event with \nheader : \n{}", header.toString());
-        ObjectMapper mapper = new ObjectMapper();
-
-        try {
-            String json = mapper.writeValueAsString(header);
-            return json.getBytes();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
 
     }
 
-    public String getContentCreatedEvent(CreateContentRequest request, String link) {
+    public ContentCreatedEventBody getContentCreatedEventBody(CreateContentRequest request, String link) {
 
-        ContentCreatedEventBody body =  ContentCreatedEventBody.builder()
+        return ContentCreatedEventBody.builder()
                 .createdBy(request.getUsername())
                 .creationDate(String.valueOf(request.getCreationDate().toInstant().toEpochMilli()))
                 .description("description")
@@ -83,12 +85,21 @@ public class KafkaEventPublisher implements EventPublisher{
                 .status("ACTIVE")
                 .version(String.valueOf(0))
                 .build();
+    }
 
-        log.info("KafkaEventPublisher created an event with\nbody : \n{} ", body.toString());
+    public String getEventBodyPayload(ContentCreatedEventBody body) {
         ObjectMapper mapper = new ObjectMapper();
-
         try {
             return mapper.writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static ContentCreatedEventBody getContentCreatedEventBodyFromPayload(String payload) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.readValue(payload, ContentCreatedEventBody.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

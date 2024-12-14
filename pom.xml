@@ -12,10 +12,11 @@
 
     <groupId>xmpl.eyaz.event.storming</groupId>
     <artifactId>kafka-event-storming-app</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>kafka-event-storming-app</name>
     <modules>
+        <module>application-contract</module>
         <module>service-message-creator</module>
         <module>service-message-reader</module>
     </modules>
@@ -28,14 +29,19 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>xmpl.eyaz.event.storming.app.contract</groupId>
+                <artifactId>application-contract</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
                 <groupId>xmpl.eyaz.event.storming.service.creater</groupId>
                 <artifactId>service-message-creator</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <version>1.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>xmpl.eyaz.event.storming.service.reader</groupId>
                 <artifactId>service-message-reader</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <version>1.1-SNAPSHOT</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

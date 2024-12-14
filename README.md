@@ -41,10 +41,10 @@ This project is a Spring-based Java application leveraging Kafka for event-drive
         - Listens to the Kafka topic `service-content-topic`.
         - Processes incoming messages, converts them to events, and logs the details.
 
-## Project Features (Version 1.1)
+## Project Features (Version 1.1-SNAPSHOT)
 1. **New Module: `application-contract`**:
    - A new module named `application-contract` was introduced.
-   - This module centralizes the packages exchanged between services, effectively establishing a protocol for inter-service communication.
+   - This module centralizes the packgages exchanged between services, effectively establishing a protocol for inter-service communication.
 2. **Header Enhancements**:
    - Significant improvements were made to the headers of the exchanged packages to support enhanced metadata and flexibility.
 3. **Improved Service Interactions**:

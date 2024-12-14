@@ -1,18 +1,19 @@
-package xmpl.eyaz.event.storming.service.creator.message;
+package xmpl.eyaz.event.storming.app.contract.contentcreated;
 
 public class ContentCreatedEventBody {
 
-    private final String createdBy;
-    private final String creationDate;
-    private final String description;
-    private final String eventType;
-    private final String aggregateId;
-    private final String content;
-    private final String link;
-    private final String modifiedBy;
-    private final String name;
-    private final String status;
-    private final String version;
+    private String createdBy;
+    private String creationDate;
+    private String description;
+    private String eventType;
+    private String aggregateId;
+    private String content;
+    private String link;
+    private String modifiedBy;
+    private String name;
+    private String status;
+    private String version;
+
 
     public String getCreatedBy() {
         return createdBy;
@@ -58,13 +59,9 @@ public class ContentCreatedEventBody {
         return version;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
     @Override
     public String toString() {
-        return "ContentCreatedEventBody{" +
+        return "ContentCreatedEventBody {" +
                 "createdBy='" + createdBy + '\'' +
                 ", creationDate='" + creationDate + '\'' +
                 ", description='" + description + '\'' +
@@ -77,6 +74,13 @@ public class ContentCreatedEventBody {
                 ", status='" + status + '\'' +
                 ", version='" + version + '\'' +
                 '}';
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public ContentCreatedEventBody() {
     }
 
     private ContentCreatedEventBody(Builder builder) {
@@ -94,6 +98,7 @@ public class ContentCreatedEventBody {
     }
 
     public static final class Builder {
+
         private String createdBy;
         private String creationDate;
         private String description;
